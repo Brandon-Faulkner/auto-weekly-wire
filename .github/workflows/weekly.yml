@@ -1,0 +1,29 @@
+name: Weekly Wire
+
+on:
+  schedule:
+    - cron: "0 13 * * WED"   # 8:00 AM America/Chicago = 13:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci --omit=dev
+      - name: Run job
+        env:
+          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
+          MAILCHIMP_LIST_ID: ${{ secrets.MAILCHIMP_LIST_ID }}
+          GEMINI_API_KEY:     ${{ secrets.GEMINI_API_KEY }}
+          PCO_PAT_ID:         ${{ secrets.PCO_PAT_ID }}
+          PCO_PAT_SECRET:     ${{ secrets.PCO_PAT_SECRET }}
+          MC_FROM_NAME:       ${{ secrets.MC_FROM_NAME }}
+          MC_REPLY_TO:        ${{ secrets.MC_REPLY_TO }}
+          YT_CHANNEL_ID:      ${{ vars.YT_CHANNEL_ID }}
+          YT_API_KEY:         ${{ vars.YT_API_KEY }}
+          CALENDAR_ICS:       ${{ vars.CALENDAR_ICS }}
+          NODE_ENV:           production
+        run: npm run run

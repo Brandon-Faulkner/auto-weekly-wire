@@ -1,0 +1,16 @@
+{
+  "name": "auto-weekly-wire",
+  "type": "module",
+  "scripts": {
+    "dry": "node src/cli-run.js --dry",
+    "start": "node src/cli-run.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@mailchimp/mailchimp_marketing": "^3.0.80",
+    "axios": "^1.7.4",
+    "dotenv": "^17.2.2",
+    "luxon": "^3.5.0",
+    "sanitize-html": "^2.13.0"
+  }
+}
