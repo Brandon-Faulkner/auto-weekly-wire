@@ -67,7 +67,7 @@ async function main() {
     apiKey: process.env.YT_API_KEY,
   });
 
-  /* const sermonOutline = await fetchPcoMessageOutline({
+  const sermonOutline = await fetchPcoMessageOutline({
     patId: process.env.PCO_PAT_ID,
     patSecret: process.env.PCO_PAT_SECRET,
   });
@@ -75,8 +75,7 @@ async function main() {
   const sermonSummary = await summarizeSermon({
     transcript: sermonOutline?.description || "",
     title: sermon?.title || "This Week's Message",
-  }); */
-  const sermonSummary = "Sermon Summary";
+  });
 
   // Begin rendering information in the HTML
   let remaining = calcRemaining(financial.givingGoal, financial.giftsReceived);
