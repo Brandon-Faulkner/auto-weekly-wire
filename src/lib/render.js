@@ -1,13 +1,23 @@
 import { fmtDate, sanitize, escapeHtml, leftAlignParagraphs } from "./utils.js";
 
 export function renderRemainingAmount(givingGoal, giftsReceived) {
-  if (!givingGoal || !giftsReceived) return "0";
-  return givingGoal;
+  const goal = Number(givingGoal) || 0;
+  const received = Number(giftsReceived) || 0;
+
+  // Ensure it doesn't go below 0
+  const remaining = Math.max(goal - received, 0);
+
+  // Format as U.S. currency, no cents
+  return remaining.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
 }
 
-export function renderStatistic(financialStat) {
-  if (!financialStat) return "0";
-  return financialStat;
+export function renderStatistic(financialStat) {;
+  return Number(financialStat) || 0;
 }
 
 export function renderCalendar(events) {
@@ -27,7 +37,7 @@ export function renderUpcomingEvents(regs) {
     .map((r) => {
       const hasDate = !!r.display_starts_at;
       const when = hasDate ? fmtDate(r.display_starts_at) : null;
-      const whenHtml = hasDate ? `<strong>${when}</strong> • ` : "";
+      const whenHtml = hasDate ? `<strong>${when}</strong> - ` : "";
       const url = r.url || "#";
       return `<li>${whenHtml}${escapeHtml(
         r.title

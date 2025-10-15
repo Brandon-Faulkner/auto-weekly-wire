@@ -78,14 +78,14 @@ async function main() {
   });
 
   // Begin rendering information in the HTML
-  let remaining = calcRemaining(financial.givingGoal, financial.giftsReceived);
+  let remaining = renderRemainingAmount(financial.givingGoal, financial.giftsReceived);
   let html = fs.readFileSync("templates/base.html", "utf8");
-  html = html.replaceAll("{{F_R}}", renderRemainingAmount(remaining));
+  html = html.replaceAll("{{F_R}}", remaining);
   html = html.replaceAll("{{F_G}}", renderStatistic(financial.givingGoal));
   html = html.replaceAll("{{F_T}}", renderStatistic(financial.totalGifts));
   html = html.replaceAll("{{F_N}}", renderStatistic(financial.newGivers));
   html = html.replaceAll("{{F_U}}", renderStatistic(financial.uniqueGivers));
-  html = html.replaceAll("{{CALENDAR}}", renderCalendar(calendar));
+  //html = html.replaceAll("{{CALENDAR}}", renderCalendar(calendar));
   html = html.replaceAll("{{EVENTS}}", renderUpcomingEvents(registrations));
   html = html.replaceAll("{{SERMON}}", renderSermon(sermon, sermonSummary));
   html = renderRegistrations(html, registrations);
@@ -100,7 +100,7 @@ async function main() {
     console.log("[DRY RUN] Would create Mailchimp draft with:");
     console.log({
       subject,
-      calendar: calendar.length,
+      //calendar: calendar.length,
       registrations: registrations.length,
       videoId: sermon?.videoId,
     });

@@ -1,14 +1,81 @@
 import axios from "axios";
+import { DateTime } from "luxon";
 
 // Get the current financial stats from PCO
 export async function fetchPcoFinancialStats({ patId, patSecret }) {
-  return {
-    giftsReceived: 30000,
-    givingGoal: 45000,
-    totalGifts: 100,
-    newGivers: 10,
-    uniqueGivers: 5,
+  if (!patId || !patSecret) return [];
+
+  const auth = Buffer.from(`${patId}:${patSecret}`).toString("base64");
+  const base = "https://api.planningcenteronline.com/giving/v2";
+  const headers = {
+    Authorization: `Basic ${auth}`,
+    Accept: "application/json",
   };
+
+  const start = DateTime.local().startOf("month").toISODate();
+  const end = DateTime.local().plus({ months: 1 }).startOf("month").toISODate();
+
+  const getAll = async (url) => {
+    let out = [];
+    while (url) {
+      const res = await axios.get(url, { headers, timeout: 15000 });
+      out = out.concat(res.data?.data ?? []);
+      url = res.data?.links?.next || null;
+    }
+    return out;
+  };
+
+  try {
+    // 1) All donations received this month
+    const donations = await getAll(
+      `${base}/donations?where[received_at][gte]=${start}&where[received_at][lt]=${end}&per_page=100`
+    );
+
+    const totalGifts = donations.length;
+
+    const giftsReceivedCents = donations.reduce(
+      (sum, d) => sum + (d?.attributes?.amount_cents ?? 0),
+      0
+    );
+    const giftsReceived = +(giftsReceivedCents / 100).toFixed(2);
+
+    const personIds = [
+      ...new Set(
+        donations.map((d) => d?.relationships?.person?.data?.id).filter(Boolean)
+      ),
+    ];
+    const uniqueGivers = personIds.length;
+
+    // 2) New givers = people with NO donation before month start
+    const hasPriorDonation = async (personId) => {
+      const url = `${base}/people/${personId}/donations?where[received_at][lt]=${start}&per_page=1&order=-received_at`;
+      const res = await axios.get(url, { headers, timeout: 15000 });
+      return (res.data?.data?.length ?? 0) > 0;
+    };
+
+    let newGivers = 0;
+    const pool = 5; // small concurrency to be kind to the API
+    for (let i = 0; i < personIds.length; i += pool) {
+      const chunk = personIds.slice(i, i + pool);
+      const checks = await Promise.all(
+        chunk.map((id) => hasPriorDonation(id).catch(() => true))
+      );
+      newGivers += checks.filter((hadPrior) => !hadPrior).length;
+    }
+
+    const givingGoal = 45000;
+
+    return { giftsReceived, givingGoal, totalGifts, newGivers, uniqueGivers };
+  } catch (err) {
+    console.error("PCO Giving stats error:", err?.message || err);
+    return {
+      giftsReceived: 0,
+      givingGoal: 0,
+      totalGifts: 0,
+      newGivers: 0,
+      uniqueGivers: 0,
+    };
+  }
 }
 
 // Get the upcoming calendar events from PCO
@@ -125,6 +192,7 @@ export async function fetchPcoOpenRegistrations({ patId, patSecret }) {
         id: s.id,
         title: a.name,
         starts_at: startsAt, // raw ISO (UTC)
+        isOngoing,
         display_starts_at,
         url: a.new_registration_url?.split("/reservations/new")[0] || null,
         description_html: a.description || null,
@@ -134,6 +202,8 @@ export async function fetchPcoOpenRegistrations({ patId, patSecret }) {
     })
     // Require: has a start, has a URL, has a logo IRL, and is open now
     .filter((e) => e.starts_at && e.url && e.logo_url && e.is_open_now)
+    // Remove ongoing registrations for now
+    .filter((e) => !e.isOngoing)
     // Sort by display_start_time, putting ongoing events at bottom
     .sort((a, b) => {
       const aTime = a.display_starts_at
