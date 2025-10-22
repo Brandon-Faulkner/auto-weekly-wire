@@ -1,20 +1,20 @@
 import sanitizeHtml from "sanitize-html";
 import { DateTime } from "luxon";
 
-export const TZ = "America/Chicago";
-
 export const fmtDate = (iso) =>
-  DateTime.fromISO(iso, { zone: TZ }).toFormat("cccc, LLL d, h:mm a");
+  DateTime.fromISO(iso, { zone: "America/Chicago" }).toFormat("cccc, LLL d, h:mm a");
 
 export function sanitize(html) {
   return sanitizeHtml(html, {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),
     allowedAttributes: {
+      "*": ["style"],
       a: ["href", "title", "target", "rel"],
       img: ["src", "alt"],
     },
   });
 }
+
 export const escapeHtml = (s = "") =>
   s.replace(
     /[&<>"']/g,
@@ -44,4 +44,18 @@ export function leftAlignParagraphs(html) {
   return html;
 }
 
-export function calcRemaining(total, received) {}
+export function calcRemainingAmount(givingGoal, giftsReceived) {
+  const goal = Number(givingGoal) || 0;
+  const received = Number(giftsReceived) || 0;
+
+  // Ensure it doesn't go below 0
+  const remaining = Math.max(goal - received, 0);
+
+  // Format as U.S. currency, no cents
+  return remaining.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+}

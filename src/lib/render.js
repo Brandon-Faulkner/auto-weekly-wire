@@ -1,34 +1,31 @@
-import { fmtDate, sanitize, escapeHtml, leftAlignParagraphs } from "./utils.js";
+import {
+  fmtDate,
+  sanitize,
+  escapeHtml,
+  leftAlignParagraphs,
+  calcRemainingAmount,
+} from "./utils.js";
 
-export function renderRemainingAmount(givingGoal, giftsReceived) {
-  const goal = Number(givingGoal) || 0;
-  const received = Number(giftsReceived) || 0;
-
-  // Ensure it doesn't go below 0
-  const remaining = Math.max(goal - received, 0);
-
-  // Format as U.S. currency, no cents
-  return remaining.toLocaleString("en-US", {
+export function renderFinancials(html, financial) {
+  let givingGoal = financial.givingGoal;
+  let remaining = calcRemainingAmount(givingGoal, financial.giftsReceived);
+  let givingGoalFormatted = givingGoal.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
-}
 
-export function renderStatistic(financialStat) {;
-  return Number(financialStat) || 0;
-}
+  html = html.replaceAll("{{F_R}}", remaining);
+  html = html.replaceAll("{{F_G}}", givingGoalFormatted);
+  html = html.replaceAll("{{F_T}}", financial.totalGifts);
+  html = html.replaceAll("{{F_TG}}", financial.totalGiftsGoal);
+  html = html.replaceAll("{{F_N}}", financial.newGivers);
+  html = html.replaceAll("{{F_NG}}", financial.newGiversGoal);
+  html = html.replaceAll("{{F_U}}", financial.uniqueGivers);
+  html = html.replaceAll("{{F_UG}}", financial.uniqueGiversGoal);
 
-export function renderCalendar(events) {
-  if (!events?.length) return "<p>No upcoming events.</p>";
-  const items = events
-    .map((e) => {
-      const when = fmtDate(e.start);
-      return `<li><strong>${when}</strong> • ${escapeHtml(e.title)}</li>`;
-    })
-    .join("\n");
-  return sanitize(`<ul>${items}</ul>`);
+  return html;
 }
 
 export function renderUpcomingEvents(regs) {
@@ -38,10 +35,16 @@ export function renderUpcomingEvents(regs) {
       const hasDate = !!r.display_starts_at;
       const when = hasDate ? fmtDate(r.display_starts_at) : null;
       const whenHtml = hasDate ? `<strong>${when}</strong> - ` : "";
-      const url = r.url || "#";
+
+      // Build a local anchor link that matches the registration anchor ID
+      const anchorId = `reg-${
+        r.id || r.title.replace(/\s+/g, "-").toLowerCase()
+      }`;
+      const url = `#${anchorId}`;
+
       return `<li>${whenHtml}${escapeHtml(
         r.title
-      )} — <a href="${url}" target="_blank" rel="noopener">Details</a></li>`;
+      )} — <a href="${url}">Details</a></li>`;
     })
     .join("\n");
   return sanitize(`<ul>${items}</ul>`);
@@ -50,14 +53,18 @@ export function renderUpcomingEvents(regs) {
 export function renderSermon(sermon, summary) {
   const title = sermon?.title || "This Week's Message";
   const thumbnail = sermon?.thumbnail;
-  const url = sermon?.url || "#";
+  const url = sermon?.url || "canachurch.com/sermons";
 
   const img = thumbnail
     ? `<p><a href="${url}" target="_blank" rel="noopener"><img src="${thumbnail}" alt="${escapeHtml(
         title
       )}"/></a></p>`
     : "";
-  return sanitize(`${img}<h3>${escapeHtml(title)}</h3><div>${summary}</div>`);
+  return sanitize(
+    `${img}<h3 style="margin-top:12px;">${escapeHtml(
+      title
+    )}</h3><div>${summary}</div>`
+  );
 }
 
 export function renderRegistrations(html, regs = []) {
@@ -89,8 +96,13 @@ export function renderRegistrations(html, regs = []) {
 
       let filled = template;
 
-      // Name/title
-      filled = filled.replaceAll("{{REGISTRATION_NAME}}", escapeHtml(name));
+      // Event anchor before registrations Name/title
+      const anchorId = `reg-${
+        reg.id || reg.title.replace(/\s+/g, "-").toLowerCase()
+      }`;
+      filled =
+        `<a id="${anchorId}" name="${anchorId}"></a>\n` +
+        filled.replaceAll("{{REGISTRATION_NAME}}", escapeHtml(name));
 
       // Main content (image + description)
       filled = filled.replace(

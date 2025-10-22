@@ -3,9 +3,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function summarizeSermon({ transcript, title }) {
   if (!transcript || transcript.length < 100) {
-    return {
-      summary: `Listen to this week's message: ${title}.`
-    };
+    return "Listen to this week's message on our YouTube channel, our website, or even through our Apple or Spotify Podcast channels!";
   }
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   const prompt = `Summarize the sermon for a church newsletter.

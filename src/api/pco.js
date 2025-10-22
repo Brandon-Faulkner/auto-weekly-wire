@@ -1,5 +1,6 @@
 import axios from "axios";
 import { DateTime } from "luxon";
+import { getTemplateGoals } from "./mailchimp.js";
 
 // Get the current financial stats from PCO
 export async function fetchPcoFinancialStats({ patId, patSecret }) {
@@ -26,10 +27,22 @@ export async function fetchPcoFinancialStats({ patId, patSecret }) {
   };
 
   try {
-    // 1) All donations received this month
-    const donations = await getAll(
+    // 1) Get donations received this month and giving goal concurrently
+    const donationsPromise = getAll(
       `${base}/donations?where[received_at][gte]=${start}&where[received_at][lt]=${end}&per_page=100`
     );
+    const goalsPromise = getTemplateGoals();
+    const [donations, goals] = await Promise.all([
+      donationsPromise,
+      goalsPromise,
+    ]);
+
+    const {
+      giving_goal: givingGoal,
+      total_gifts_goal: totalGiftsGoal,
+      new_givers_goal: newGiversGoal,
+      unique_givers_goal: uniqueGiversGoal,
+    } = goals;
 
     const totalGifts = donations.length;
 
@@ -63,23 +76,30 @@ export async function fetchPcoFinancialStats({ patId, patSecret }) {
       newGivers += checks.filter((hadPrior) => !hadPrior).length;
     }
 
-    const givingGoal = 45000;
-
-    return { giftsReceived, givingGoal, totalGifts, newGivers, uniqueGivers };
+    return {
+      giftsReceived,
+      totalGifts,
+      newGivers,
+      uniqueGivers,
+      givingGoal,
+      totalGiftsGoal,
+      newGiversGoal,
+      uniqueGiversGoal,
+    };
   } catch (err) {
     console.error("PCO Giving stats error:", err?.message || err);
     return {
       giftsReceived: 0,
-      givingGoal: 0,
       totalGifts: 0,
       newGivers: 0,
       uniqueGivers: 0,
+      givingGoal: 0,
+      totalGiftsGoal: 0,
+      newGiversGoal: 0,
+      uniqueGiversGoal: 0,
     };
   }
 }
-
-// Get the upcoming calendar events from PCO
-export async function fetchPcoCalendar({ patId, patSecret, limit = 10 }) {}
 
 // Get the current open registrations from PCO
 export async function fetchPcoOpenRegistrations({ patId, patSecret }) {
