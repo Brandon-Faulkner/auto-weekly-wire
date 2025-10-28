@@ -55,6 +55,25 @@ export async function getTemplateGoals({
   }
 }
 
+export async function getTemplateWeeklyEvents() {
+  try {
+    const res = await mailchimp.templates.getDefaultContentForTemplate(
+      "10039709"
+    );
+    const html = res?.sections?.weekly_events;
+
+    if (!html) {
+      console.warn("No weekly_events section found in template.");
+      return 0;
+    }
+
+    return html;
+  } catch (err) {
+    console.error("Error fetching weekly events:", err.message || err);
+    return 0;
+  }
+}
+
 export async function createDraftWithHtml({
   listId,
   subject,

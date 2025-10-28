@@ -10,11 +10,12 @@ import {
 import { summarizeSermon } from "./api/summarize.js";
 import {
   renderFinancials,
+  renderWeeklyEvents,
   renderUpcomingEvents,
   renderSermon,
   renderRegistrations,
 } from "./lib/render.js";
-import { createDraftWithHtml } from "./api/mailchimp.js";
+import { createDraftWithHtml, getTemplateWeeklyEvents } from "./api/mailchimp.js";
 
 const DRY = process.argv.includes("--dry");
 
@@ -31,6 +32,7 @@ async function main() {
           - {{F_U}} = Unique Givers
             - {{F_UG}} = Unique Givers Goal
       - Calander at a Glance:
+          - {{WEEKLY}} = Weekly evetns pulled from mailchimp template 
           - {{EVENTS}} = Condensed PCO Registrations
       - Last Week's Sermon:
           - {{SERMON}} = Youtube link + title + AI summarized transcript from Gemini and PCO
@@ -47,6 +49,8 @@ async function main() {
     patId: process.env.PCO_PAT_ID,
     patSecret: process.env.PCO_PAT_SECRET,
   });
+
+  const weekly = await getTemplateWeeklyEvents();
 
   const registrations = await fetchPcoOpenRegistrations({
     patId: process.env.PCO_PAT_ID,
@@ -71,6 +75,7 @@ async function main() {
   // Begin rendering information in the HTML
   let html = fs.readFileSync("templates/base.html", "utf8");
   html = renderFinancials(html, financial);
+  html = html.replaceAll("{{WEEKLY}}", renderWeeklyEvents(weekly));
   html = html.replaceAll("{{EVENTS}}", renderUpcomingEvents(registrations));
   html = html.replaceAll("{{SERMON}}", renderSermon(sermon, sermonSummary));
   html = renderRegistrations(html, registrations);

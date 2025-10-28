@@ -301,7 +301,7 @@ export async function fetchPcoMessageOutline({
   const messageHeaderIdx = items.findIndex(
     (it) =>
       it?.attributes?.item_type?.toLowerCase() === "header" &&
-      (it?.attributes?.title || "").trim().toLowerCase() === "message"
+      (it?.attributes?.title || "").trim().toLowerCase().includes("message")
   );
 
   if (messageHeaderIdx === -1) {

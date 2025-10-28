@@ -6,8 +6,10 @@ export async function summarizeSermon({ transcript, title }) {
     return "Listen to this week's message on our YouTube channel, our website, or even through our Apple or Spotify Podcast channels!";
   }
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-  const prompt = `Summarize the sermon for a church newsletter.
-- 180-220 words, warm pastoral tone.`;
+  const prompt = `Summarize the sermon for a church newsletter. 
+                  180-220 words, warm, southern baptist pastoral tone. 
+                  Do not include the title of the sermon at the beginning. 
+                  Also remove the two "##" at the begining of your response.`;
   const res = await model.generateContent([
     {
       text: `${prompt}\n\nTitle: ${title}\nTranscript:\n${transcript.slice(

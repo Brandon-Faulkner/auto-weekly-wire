@@ -28,6 +28,10 @@ export function renderFinancials(html, financial) {
   return html;
 }
 
+export function renderWeeklyEvents(html) {
+  return `<div mc:edit="weekly_events" class="mceText" style="width:100% text-align:left;">${html}</div>`;
+}
+
 export function renderUpcomingEvents(regs) {
   if (!regs?.length) return "<p>No upcoming registrations.</p>";
   const items = regs

@@ -2,7 +2,9 @@ import sanitizeHtml from "sanitize-html";
 import { DateTime } from "luxon";
 
 export const fmtDate = (iso) =>
-  DateTime.fromISO(iso, { zone: "America/Chicago" }).toFormat("cccc, LLL d, h:mm a");
+  DateTime.fromISO(iso, { zone: "America/Chicago" }).toFormat(
+    "cccc, LLL d, h:mm a"
+  );
 
 export function sanitize(html) {
   return sanitizeHtml(html, {
@@ -44,18 +46,42 @@ export function leftAlignParagraphs(html) {
   return html;
 }
 
-export function calcRemainingAmount(givingGoal, giftsReceived) {
+export function calcRemainingAmount(
+  givingGoal,
+  giftsReceived,
+  stretchIncrement = 10000
+) {
   const goal = Number(givingGoal) || 0;
   const received = Number(giftsReceived) || 0;
+  const stretch = Number(stretchIncrement) || 0;
 
-  // Ensure it doesn't go below 0
-  const remaining = Math.max(goal - received, 0);
+  if (received < goal) {
+    const remaining = goal - received;
+    return remaining.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  }
 
-  // Format as U.S. currency, no cents
-  return remaining.toLocaleString("en-US", {
+  // Goal met - apply any overage toward the next $stretch
+  const over = received - goal;
+  const applied = Math.min(over, stretch);
+  const remainingStretch = Math.max(stretch - applied, 0);
+  const remainingStretchFormatted = remainingStretch.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
+  const stretchFormatted = stretch.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+  // Return the html message + the remaining stretch
+  return `<div style="font-size: 12px;">Goal Met!<br/>Can we stretch an additional ${stretchFormatted}?</div>${remainingStretchFormatted}`;
 }
