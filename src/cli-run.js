@@ -15,7 +15,10 @@ import {
   renderSermon,
   renderRegistrations,
 } from "./lib/render.js";
-import { createDraftWithHtml, getTemplateWeeklyEvents } from "./api/mailchimp.js";
+import {
+  createDraftWithHtml,
+  getTemplateWeeklyEvents,
+} from "./api/mailchimp.js";
 
 const DRY = process.argv.includes("--dry");
 
@@ -67,17 +70,17 @@ async function main() {
     patSecret: process.env.PCO_PAT_SECRET,
   });
 
-  const sermonSummary = await summarizeSermon({
+  /* const sermonSummary = await summarizeSermon({
     transcript: sermonOutline?.description || "",
     title: sermon?.title || "This Week's Message",
-  });
+  }); */
 
   // Begin rendering information in the HTML
   let html = fs.readFileSync("templates/base.html", "utf8");
   html = renderFinancials(html, financial);
   html = html.replaceAll("{{WEEKLY}}", renderWeeklyEvents(weekly));
   html = html.replaceAll("{{EVENTS}}", renderUpcomingEvents(registrations));
-  html = html.replaceAll("{{SERMON}}", renderSermon(sermon, sermonSummary));
+  html = html.replaceAll("{{SERMON}}", renderSermon(sermon, sermonOutline));
   html = renderRegistrations(html, registrations);
 
   // Setup email information
@@ -93,7 +96,7 @@ async function main() {
       financials: financial,
       registrations: registrations.length,
       videoId: sermon?.videoId,
-      sermonSummary: sermonSummary
+      sermonSummary: sermonOutline,
     });
     fs.writeFileSync("test.html", html);
     return;

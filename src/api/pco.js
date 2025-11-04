@@ -246,6 +246,8 @@ export async function fetchPcoMessageOutline({
   serviceTypeId = "884831",
 }) {
   if (!patId || !patSecret) return [];
+  const defaultDesc =
+    "Listen to this week's message on our YouTube channel, our website, or even through our Apple or Spotify Podcast channels!";
 
   const auth = Buffer.from(`${patId}:${patSecret}`).toString("base64");
   const api = axios.create({
@@ -274,10 +276,8 @@ export async function fetchPcoMessageOutline({
     return new Date(sortDate) <= new Date(nowISO);
   });
 
-  if (!pastPlan) {
-    throw new Error(
-      "No past plan found. (Check serviceTypeId or date assumptions.)"
-    );
+  if (!pastPlan) { 
+    return defaultDesc;   
   }
 
   const planId = pastPlan.id;
@@ -305,10 +305,8 @@ export async function fetchPcoMessageOutline({
   );
 
   if (messageHeaderIdx === -1) {
-    throw new Error('No "Message" header found in this plan.');
+    return defaultDesc;
   }
-
-  const messageHeader = items[messageHeaderIdx];
 
   // 4) Find the first non-header item after it
   const firstChild = items
@@ -316,20 +314,13 @@ export async function fetchPcoMessageOutline({
     .find((it) => it?.attributes?.item_type?.toLowerCase() !== "header");
 
   if (!firstChild) {
-    throw new Error('No item found after the "Message" header.');
+    return defaultDesc;
   }
 
   const description =
     firstChild?.attributes?.description ||
     firstChild?.attributes?.html_details ||
-    "";
+    defaultDesc;
 
-  return {
-    planId,
-    planSortDate: pastPlan?.attributes?.sort_date,
-    headerId: messageHeader.id,
-    itemId: firstChild.id,
-    itemTitle: firstChild?.attributes?.title || "",
-    description,
-  };
+  return description;
 }
