@@ -60,7 +60,7 @@ export function renderSermon(sermon, summary) {
   const url = sermon?.url || "canachurch.com/sermons";
 
   const img = thumbnail
-    ? `<p><a href="${url}" target="_blank" rel="noopener"><img src="${thumbnail}" alt="${escapeHtml(
+    ? `<p style="text-align:center;"><a href="${url}" target="_blank" rel="noopener"><img src="${thumbnail}" alt="${escapeHtml(
         title
       )}"/></a></p>`
     : "";

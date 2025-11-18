@@ -6,6 +6,20 @@ export const fmtDate = (iso) =>
     "cccc, LLL d, h:mm a"
   );
 
+export function getNextWednesday() {
+  const currentDate = DateTime.now().setZone("America/Chicago");
+
+  const today = currentDate.weekday; // 1–7
+  const target = 3; // Wednesday
+
+  // Days to add (never 0, always forward)
+  const diff = today <= target ? target - today : 7 - (today - target);
+
+  const nextWednesday = currentDate.plus({ days: diff });
+
+  return nextWednesday;
+}
+
 export function sanitize(html) {
   return sanitizeHtml(html, {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),

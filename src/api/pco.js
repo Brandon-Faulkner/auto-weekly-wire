@@ -276,8 +276,8 @@ export async function fetchPcoMessageOutline({
     return new Date(sortDate) <= new Date(nowISO);
   });
 
-  if (!pastPlan) { 
-    return defaultDesc;   
+  if (!pastPlan) {
+    return defaultDesc;
   }
 
   const planId = pastPlan.id;
@@ -317,10 +317,15 @@ export async function fetchPcoMessageOutline({
     return defaultDesc;
   }
 
-  const description =
+  let description =
     firstChild?.attributes?.description ||
     firstChild?.attributes?.html_details ||
     defaultDesc;
+
+  //Convert newlines to <br>
+  if (!firstChild?.attributes?.html_details && description) {
+    description = String(description).replace(/\r\n/g, "\n").replace(/\n/g, "<br />");
+  }
 
   return description;
 }

@@ -19,6 +19,7 @@ import {
   createDraftWithHtml,
   getTemplateWeeklyEvents,
 } from "./api/mailchimp.js";
+import { getNextWednesday } from "./lib/utils.js";
 
 const DRY = process.argv.includes("--dry");
 
@@ -84,8 +85,8 @@ async function main() {
   html = renderRegistrations(html, registrations);
 
   // Setup email information
-  const currentDate = DateTime.now().setZone("America/Chicago");
-  const subject = `${currentDate.toFormat("DDD")} Wire`;
+  const nextWednesday = getNextWednesday();
+  const subject = `AutoWire ${nextWednesday.toFormat("DDD")}`;
   const fromName = process.env.MC_FROM_NAME || "Cana Church";
   const replyTo = process.env.MC_REPLY_TO || "cana@canachurch.com";
 
