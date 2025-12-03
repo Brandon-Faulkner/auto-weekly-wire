@@ -86,14 +86,18 @@ async function main() {
 
   // Setup email information
   const nextWednesday = getNextWednesday();
-  const subject = `AutoWire ${nextWednesday.toFormat("DDD")}`;
+  const title = `Auto Wire ${nextWednesday.toFormat("DDD")}`;
+  const subject = 'Auto Wire for the Latest News!';
+  const previewTxt = 'Get in the action this week!';
   const fromName = process.env.MC_FROM_NAME || "Cana Church";
   const replyTo = process.env.MC_REPLY_TO || "cana@canachurch.com";
 
   if (DRY) {
     console.log("[DRY RUN] Would create Mailchimp draft with:");
     console.log({
+      title,
       subject,
+      previewTxt,
       financials: financial,
       registrations: registrations.length,
       videoId: sermon?.videoId,
@@ -105,7 +109,9 @@ async function main() {
 
   const mc = await createDraftWithHtml({
     listId: process.env.MAILCHIMP_LIST_ID,
+    title,
     subject,
+    previewTxt,
     fromName,
     replyTo,
     html,

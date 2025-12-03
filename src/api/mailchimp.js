@@ -76,7 +76,9 @@ export async function getTemplateWeeklyEvents() {
 
 export async function createDraftWithHtml({
   listId,
+  title,
   subject,
+  previewTxt,
   fromName,
   replyTo,
   html,
@@ -86,9 +88,10 @@ export async function createDraftWithHtml({
     recipients: { list_id: listId },
     settings: {
       subject_line: subject,
+      preview_text: previewTxt,
       from_name: fromName,
       reply_to: replyTo,
-      title: subject,
+      title: title,
       folder_id: "b3446b3d1b",
     },
   });
